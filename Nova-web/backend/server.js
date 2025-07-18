@@ -260,17 +260,26 @@ const startServer = async () => {
   await connectDB();
   
   app.listen(PORT, () => {
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? process.env.BACKEND_URL || `https://api.novaoptimizer.com`
+      : `http://localhost:${PORT}`;
+    
     console.log(`🚀 Nova API Server running on port ${PORT}`);
     console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-    console.log(`📚 API docs: http://localhost:${PORT}/api/docs`);
-    console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+    console.log(`🔗 Health check: ${baseUrl}/health`);
+    console.log(`📚 API docs: ${baseUrl}/api/docs`);
+    console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+    console.log(`🔗 Discord Redirect: ${process.env.DISCORD_REDIRECT_URI || 'http://localhost:5000/api/auth/discord/callback'}`);
     
     if (process.env.NODE_ENV === 'development') {
       console.log('\n🔧 Development endpoints:');
-      console.log(`   Auth: http://localhost:${PORT}/api/auth/discord`);
-      console.log(`   Downloads: http://localhost:${PORT}/api/downloads`);
-      console.log(`   Status: http://localhost:${PORT}/api/status`);
+      console.log(`   Auth: ${baseUrl}/api/auth/discord`);
+      console.log(`   Downloads: ${baseUrl}/api/downloads`);
+      console.log(`   Status: ${baseUrl}/api/status`);
+    } else {
+      console.log('\n🌐 Production endpoints:');
+      console.log(`   Auth: ${baseUrl}/api/auth/discord`);
+      console.log(`   API: ${baseUrl}/api`);
     }
   });
 };
