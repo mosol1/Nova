@@ -3,12 +3,38 @@ const axios = require('axios');
 
 class DiscordOAuthService {
   constructor() {
-    this.clientId = process.env.DISCORD_CLIENT_ID;
-    this.clientSecret = process.env.DISCORD_CLIENT_SECRET;
-    this.redirectUri = process.env.DISCORD_REDIRECT_URI || 'http://localhost:5000/api/auth/discord/callback';
-    this.guildId = process.env.DISCORD_GUILD_ID;
-    this.verifiedRoleId = process.env.DISCORD_VERIFIED_ROLE_ID;
-    this.botToken = process.env.DISCORD_BOT_TOKEN;
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Smart environment switching - use dev or prod credentials based on NODE_ENV
+    this.clientId = isProduction 
+      ? process.env.DISCORD_PROD_CLIENT_ID 
+      : process.env.DISCORD_DEV_CLIENT_ID;
+    
+    this.clientSecret = isProduction 
+      ? process.env.DISCORD_PROD_CLIENT_SECRET 
+      : process.env.DISCORD_DEV_CLIENT_SECRET;
+    
+    this.redirectUri = isProduction 
+      ? process.env.DISCORD_PROD_REDIRECT_URI || 'https://api.novaoptimizer.com/api/auth/discord/callback'
+      : process.env.DISCORD_DEV_REDIRECT_URI || 'http://localhost:5000/api/auth/discord/callback';
+    
+    // Optional: Bot credentials (if you have different bots for dev/prod)
+    this.botToken = isProduction 
+      ? process.env.DISCORD_PROD_BOT_TOKEN 
+      : process.env.DISCORD_DEV_BOT_TOKEN;
+    
+    this.guildId = isProduction 
+      ? process.env.DISCORD_PROD_GUILD_ID 
+      : process.env.DISCORD_DEV_GUILD_ID;
+    
+    this.verifiedRoleId = isProduction 
+      ? process.env.DISCORD_PROD_VERIFIED_ROLE_ID 
+      : process.env.DISCORD_DEV_VERIFIED_ROLE_ID;
+
+    // Log which environment we're using
+    console.log(`🔗 Discord OAuth configured for: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+    console.log(`📱 Client ID: ${this.clientId?.substring(0, 8)}...`);
+    console.log(`🔗 Redirect URI: ${this.redirectUri}`);
   }
 
   // Generate Discord OAuth URL

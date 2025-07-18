@@ -22,14 +22,22 @@ const PORT = process.env.PORT || 5000;
 // Trust proxy for Railway deployment
 app.set('trust proxy', 1);
 
-// MongoDB Connection
+// Smart environment configuration
+const isProduction = process.env.NODE_ENV === 'production';
+
+// MongoDB Connection with smart environment switching
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
+    const mongoUri = isProduction 
+      ? process.env.MONGODB_URI_PROD || process.env.MONGODB_URI
+      : process.env.MONGODB_URI_DEV || process.env.MONGODB_URI || 'mongodb://localhost:27017/nova-dev';
+    
+    await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ MongoDB connected successfully');
+    console.log(`✅ MongoDB connected successfully (${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'})`);
+    console.log(`📊 Database: ${mongoUri.split('@')[1] || 'localhost'}`);
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);
     process.exit(1);
@@ -72,17 +80,21 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
-// CORS configuration
+// CORS configuration with smart environment switching
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = process.env.NODE_ENV === 'production' 
+    const frontendUrl = isProduction 
+      ? process.env.FRONTEND_URL_PROD || process.env.FRONTEND_URL || 'https://novaoptimizer.com'
+      : process.env.FRONTEND_URL_DEV || 'http://localhost:5173';
+    
+    const allowedOrigins = isProduction 
       ? [
           'https://novaoptimizer.com', 
           'https://www.novaoptimizer.com',
-          process.env.FRONTEND_URL,
+          frontendUrl,
           'nova://'
         ] 
-      : ['http://localhost:3000', 'http://localhost:5173', 'nova://'];
+      : ['http://localhost:3000', 'http://localhost:5173', frontendUrl, 'nova://'];
     
     // Allow requests with no origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
@@ -260,26 +272,31 @@ const startServer = async () => {
   await connectDB();
   
   app.listen(PORT, () => {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? process.env.BACKEND_URL || `https://api.novaoptimizer.com`
-      : `http://localhost:${PORT}`;
+    const baseUrl = isProduction 
+      ? process.env.BACKEND_URL_PROD || process.env.BACKEND_URL || `https://api.novaoptimizer.com`
+      : process.env.BACKEND_URL_DEV || `http://localhost:${PORT}`;
+    
+    const frontendUrl = isProduction 
+      ? process.env.FRONTEND_URL_PROD || process.env.FRONTEND_URL || 'https://novaoptimizer.com'
+      : process.env.FRONTEND_URL_DEV || 'http://localhost:5173';
     
     console.log(`🚀 Nova API Server running on port ${PORT}`);
-    console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📱 Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
     console.log(`🔗 Health check: ${baseUrl}/health`);
     console.log(`📚 API docs: ${baseUrl}/api/docs`);
-    console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
-    console.log(`🔗 Discord Redirect: ${process.env.DISCORD_REDIRECT_URI || 'http://localhost:5000/api/auth/discord/callback'}`);
+    console.log(`🌐 Frontend URL: ${frontendUrl}`);
     
-    if (process.env.NODE_ENV === 'development') {
+    if (isProduction) {
+      console.log('\n🌐 Production endpoints:');
+      console.log(`   Auth: ${baseUrl}/api/auth/discord`);
+      console.log(`   API: ${baseUrl}/api`);
+      console.log(`   Frontend: ${frontendUrl}`);
+    } else {
       console.log('\n🔧 Development endpoints:');
       console.log(`   Auth: ${baseUrl}/api/auth/discord`);
       console.log(`   Downloads: ${baseUrl}/api/downloads`);
       console.log(`   Status: ${baseUrl}/api/status`);
-    } else {
-      console.log('\n🌐 Production endpoints:');
-      console.log(`   Auth: ${baseUrl}/api/auth/discord`);
-      console.log(`   API: ${baseUrl}/api`);
+      console.log(`   Frontend: ${frontendUrl}`);
     }
   });
 };
