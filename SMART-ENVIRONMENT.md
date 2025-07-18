@@ -1,57 +1,31 @@
 # 🧠 Smart Environment Configuration
 
-## 🎯 **One Config, Two Environments**
+## 🎯 **Simple Dev/Prod Switching**
 
-This setup lets you have **both development and production credentials** in the same environment file. Just change `NODE_ENV` and everything switches automatically!
+**Local Development:** Use `.env` file with `NODE_ENV=development`  
+**Production:** Railway variables with `NODE_ENV=production`
+
+Just change `NODE_ENV` and everything switches automatically!
 
 ---
 
-## ⚙️ **Railway Environment Variables (Set Once, Use Forever)**
+## ⚙️ **Environment Setup**
 
-Add **all** these variables to Railway. The system will automatically pick dev or prod based on `NODE_ENV`:
+### **Local Development (.env file):**
+Create `Nova-web/backend/.env` file:
 
 ```bash
-# ===== ENVIRONMENT CONTROL =====
-NODE_ENV=production  # Change this to 'development' for dev mode
+# For local development
+NODE_ENV=development
 
-# ===== FRONTEND URLS =====
-FRONTEND_URL_PROD=https://novaoptimizer.com
-FRONTEND_URL_DEV=http://localhost:5173
+# All your dev and prod credentials here
+# (Copy from .env.example)
+```
 
-# ===== BACKEND URLS =====
-BACKEND_URL_PROD=https://api.novaoptimizer.com
-BACKEND_URL_DEV=http://localhost:5000
-
-# ===== DATABASE =====
-MONGODB_URI_PROD=mongodb+srv://user:pass@cluster.mongodb.net/nova-prod
-MONGODB_URI_DEV=mongodb://localhost:27017/nova-dev
-
-# ===== DISCORD OAUTH - PRODUCTION =====
-DISCORD_PROD_CLIENT_ID=your-production-discord-client-id
-DISCORD_PROD_CLIENT_SECRET=your-production-discord-client-secret
-DISCORD_PROD_REDIRECT_URI=https://api.novaoptimizer.com/api/auth/discord/callback
-
-# ===== DISCORD OAUTH - DEVELOPMENT =====
-DISCORD_DEV_CLIENT_ID=your-development-discord-client-id
-DISCORD_DEV_CLIENT_SECRET=your-development-discord-client-secret
-DISCORD_DEV_REDIRECT_URI=http://localhost:5000/api/auth/discord/callback
-
-# ===== DISCORD BOT (Optional) =====
-DISCORD_PROD_BOT_TOKEN=your-production-bot-token
-DISCORD_DEV_BOT_TOKEN=your-development-bot-token
-DISCORD_PROD_GUILD_ID=your-production-guild-id
-DISCORD_DEV_GUILD_ID=your-development-guild-id
-
-# ===== SECURITY =====
-JWT_SECRET_PROD=your-super-secure-production-jwt-secret-256-chars
-JWT_SECRET_DEV=dev-jwt-secret-can-be-simpler
-
-# ===== SHARED SETTINGS =====
-JWT_EXPIRES_IN=7d
-PORT=5000
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-AUTH_RATE_LIMIT_MAX=10
+### **Production (Railway Variables):**
+Copy your `.env` file content to Railway, but change:
+```bash
+NODE_ENV=production
 ```
 
 ---
