@@ -7,7 +7,6 @@
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "cd frontend && npm install && npm run build",
-    "postinstall": "cd frontend && npm install && cd ../backend && npm install",
     "seed": "cd backend && npm run seed",
     "setup": "cd backend && npm run setup",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
@@ -16,6 +15,6 @@
     "concurrently": "^8.2.2"
   },
   "keywords": ["nova", "system", "optimization", "react", "nodejs"],
-  "author": "Nova Team",
+  "author": "Nova Core",
   "license": "MIT"
 } 
