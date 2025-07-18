@@ -19,6 +19,9 @@ const { logAPIRequest } = require('./utils/logger');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for Railway deployment
+app.set('trust proxy', 1);
+
 // MongoDB Connection
 const connectDB = async () => {
   try {
@@ -73,7 +76,7 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = process.env.NODE_ENV === 'production' 
-      ? ['https://nova.app', 'https://www.nova.app', 'nova://'] 
+      ? [process.env.FRONTEND_URL || 'https://novaoptimizer.com', 'nova://'] 
       : ['http://localhost:3000', 'http://localhost:5173', 'nova://'];
     
     // Allow requests with no origin (mobile apps, etc.)
