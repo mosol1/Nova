@@ -1,0 +1,20 @@
+{
+  "name": "nova-web",
+  "version": "1.0.0",
+  "description": "Nova web application with React frontend and Node.js backend",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "seed": "cd backend && npm run seed",
+    "setup": "cd backend && npm run setup",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": ["nova", "system", "optimization", "react", "nodejs"],
+  "author": "Nova Team",
+  "license": "MIT"
+} 

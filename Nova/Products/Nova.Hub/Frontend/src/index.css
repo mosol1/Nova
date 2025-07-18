@@ -1,0 +1,305 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #000000;
+    color: #ffffff;
+    overflow-x: hidden;
+  }
+
+  /* Ensure dark theme consistency */
+  #root {
+    background-color: #000000;
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  /* Advanced Text Gradients */
+  .text-gradient {
+    background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.4) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    -moz-background-clip: text;
+    -moz-text-fill-color: transparent;
+  }
+  
+  .text-gradient-purple {
+    background: linear-gradient(135deg, #a855f7 0%, #c084fc 50%, rgba(168, 85, 247, 0.4) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    -moz-background-clip: text;
+    -moz-text-fill-color: transparent;
+  }
+
+  .text-gradient-animated {
+    background: linear-gradient(45deg, #ffffff 0%, #a855f7 25%, #ffffff 50%, #c084fc 75%, rgba(255, 255, 255, 0.6) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    -moz-background-clip: text;
+    -moz-text-fill-color: transparent;
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease-in-out infinite;
+  }
+  
+  /* Color Hierarchy for Dark Theme */
+  .bg-primary { background-color: #000000; }
+  .bg-secondary { background-color: #0a0a0a; }
+  .bg-tertiary { background-color: #161616; }
+  .bg-quaternary { background-color: #1a1a1a; }
+  
+  /* Text Colors */
+  .text-primary { color: #ffffff; }
+  .text-secondary { color: #a1a1aa; }
+  .text-muted { color: #71717a; }
+  
+  /* Border Colors */
+  .border-primary { border-color: #27272a; }
+  .border-secondary { border-color: #3f3f46; }
+  .border-accent { border-color: rgba(168, 85, 247, 0.2); }
+  
+  /* Advanced Glow Effects */
+  .glow-purple {
+    box-shadow: 
+      0 0 20px rgba(168, 85, 247, 0.4), 
+      0 0 40px rgba(168, 85, 247, 0.2),
+      0 0 80px rgba(168, 85, 247, 0.1);
+  }
+  
+  .glow-purple-soft {
+    box-shadow: 
+      0 0 10px rgba(168, 85, 247, 0.3), 
+      0 0 20px rgba(168, 85, 247, 0.1);
+  }
+
+  .glow-focus {
+    box-shadow: 
+      0 0 0 2px rgba(168, 85, 247, 0.4),
+      0 0 20px rgba(168, 85, 247, 0.2);
+  }
+  
+  /* Glass Morphism */
+  .glass-ultra {
+    background: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-light {
+    background: rgba(22, 22, 22, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  
+  .glass-input {
+    background: rgba(22, 22, 22, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Patterns */
+  .dot-pattern-subtle {
+    background-image: radial-gradient(circle, rgba(168, 85, 247, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .grid-pattern-subtle {
+    background-image: 
+      linear-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168, 85, 247, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+
+  /* Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-in-left {
+    animation: slideInLeft 0.3s ease-out;
+  }
+
+  /* Scrollbar */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #0a0a0a;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(168, 85, 247, 0.6), rgba(168, 85, 247, 0.3));
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(168, 85, 247, 0.8), rgba(168, 85, 247, 0.5));
+  }
+
+  /* Component Styles */
+  .nova-card {
+    background: rgba(26, 26, 26, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .nova-card:hover {
+    border-color: rgba(168, 85, 247, 0.2);
+    background: rgba(30, 30, 30, 0.9);
+    transform: translateY(-2px);
+  }
+
+  .nova-button {
+    background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nova-button:hover {
+    background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+  }
+
+  .nova-button-secondary {
+    background: rgba(168, 85, 247, 0.1);
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nova-button-secondary:hover {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.5);
+    transform: translateY(-1px);
+  }
+
+  .nova-input {
+    background: rgba(22, 22, 22, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: #ffffff;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .nova-input:focus {
+    outline: none;
+    border-color: rgba(168, 85, 247, 0.4);
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+  }
+
+  .nova-input::placeholder {
+    color: #71717a;
+  }
+
+  .product-card {
+    background: rgba(26, 26, 26, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .product-card:hover {
+    border-color: rgba(168, 85, 247, 0.2);
+    background: rgba(30, 30, 30, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(168, 85, 247, 0.1);
+  }
+}
+
+/* Advanced Animations */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Selection */
+::selection {
+  background: rgba(168, 85, 247, 0.3);
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+/* Remove default input styling */
+input, textarea, select {
+  background: transparent;
+  color: inherit;
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+  .glow-purple, .glow-purple-soft {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+  }
+  
+  .glass-ultra, .glass-light {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}

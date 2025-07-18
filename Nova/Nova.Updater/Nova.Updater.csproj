@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net48</TargetFramework>
+		<LangVersion>10.0</LangVersion>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<UseWPF>false</UseWPF>
+		<OutputPath>$(SolutionDir)bin\$(Configuration)\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Nova.Shared\Nova.Shared.csproj" />
+		<ProjectReference Include="..\Nova.Core\Nova.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="**/*.cs" Exclude="bin/**;obj/**" />
+	</ItemGroup>
+
+</Project>
