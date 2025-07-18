@@ -76,7 +76,12 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = process.env.NODE_ENV === 'production' 
-      ? [process.env.FRONTEND_URL || 'https://novaoptimizer.com', 'nova://'] 
+      ? [
+          'https://novaoptimizer.com', 
+          'https://www.novaoptimizer.com',
+          process.env.FRONTEND_URL,
+          'nova://'
+        ] 
       : ['http://localhost:3000', 'http://localhost:5173', 'nova://'];
     
     // Allow requests with no origin (mobile apps, etc.)
