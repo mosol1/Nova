@@ -12,6 +12,7 @@ interface DiscordData {
   username: string;
   discriminator: string;
   avatar: string;
+  global_name?: string;
   email?: string;
   verified?: boolean;
   profile_picture?: string;

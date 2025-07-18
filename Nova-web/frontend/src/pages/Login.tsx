@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Github, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import { authAPI } from '../lib/auth';
 import SpiralAnimation from '../components/ui/SpiralAnimation';
 
@@ -16,7 +16,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isDiscordLogin, setIsDiscordLogin] = useState(false);
-  const [isNovaHubAuth, setIsNovaHubAuth] = useState(false);
+
   
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -28,7 +28,6 @@ const Login = () => {
     const returnUrl = urlParams.get('return');
     
     if (returnUrl && returnUrl.startsWith('nova://')) {
-      setIsNovaHubAuth(true);
       
       try {
         // Show protocol handler prompt
@@ -84,9 +83,7 @@ const Login = () => {
         console.error('Error handling Nova Hub authentication:', error);
         setError('Failed to complete Nova Hub authentication');
         navigate('/dashboard');
-      } finally {
-        setIsNovaHubAuth(false);
-      }
+          }
     } else {
       // Regular login, navigate to dashboard
       navigate('/dashboard');
@@ -192,7 +189,7 @@ const Login = () => {
         state = novaUrl.searchParams.get('state');
       }
       
-      const response = await authAPI.startDiscordOAuth(state);
+      const response = await authAPI.startDiscordOAuth(state || undefined);
       
       if (response.success && response.auth_url) {
         // Redirect to Discord OAuth
