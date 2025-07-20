@@ -1,5 +1,5 @@
 import React, { useState, useEffect, type ReactNode } from 'react';
-import { type User, authAPI, getStoredUser, getStoredToken, clearAuth, getCookieUserData, getCookieAuthToken, isAuthenticatedEnhanced } from '../lib/auth';
+import { type User, authAPI, getStoredUser, getStoredToken, clearAuth, getCookieUserData, getCookieAuthToken } from '../lib/auth';
 import { AuthContext, type AuthContextType } from './AuthContextType';
 
 interface AuthProviderProps {

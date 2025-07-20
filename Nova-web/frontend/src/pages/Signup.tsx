@@ -16,6 +16,8 @@ interface DiscordData {
   email?: string;
   verified?: boolean;
   profile_picture?: string;
+  existing_user?: boolean; // Flag for existing users
+  existing_email?: string; // Existing user's email
 }
 
 const Signup = () => {
@@ -32,8 +34,9 @@ const Signup = () => {
   const [isDiscordConnected, setIsDiscordConnected] = useState(false);
   const [discordData, setDiscordData] = useState<DiscordData | null>(null);
   const [hasRestoredData, setHasRestoredData] = useState(false);
+  const [isExistingUser, setIsExistingUser] = useState(false);
   
-  const { registerWithDiscord } = useAuth();
+  const { registerWithDiscord, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -114,12 +117,38 @@ const Signup = () => {
         setDiscordData(parsedDiscordData);
         setIsDiscordConnected(true);
         
-        // Restore saved form data after Discord authentication
+        // Check if this is an existing user
+        if (parsedDiscordData.existing_user) {
+          setIsExistingUser(true);
+          // Pre-fill email with existing email or Discord email
+          const emailToUse = parsedDiscordData.existing_email || parsedDiscordData.email || '';
+          setFormData(prev => ({
+            ...prev,
+            email: emailToUse
+          }));
+          console.log('✅ Existing user detected, email pre-filled:', emailToUse);
+        } else {
+          setIsExistingUser(false);
+          // Pre-fill email with Discord email for new users
+          if (parsedDiscordData.email) {
+            setFormData(prev => ({
+              ...prev,
+              email: parsedDiscordData.email
+            }));
+          }
+        }
+        
+        // Restore other saved form data after Discord authentication
         const savedFormData = localStorage.getItem('signup_form_data');
         if (savedFormData) {
           try {
             const parsedFormData = JSON.parse(savedFormData);
-            setFormData(parsedFormData);
+            // Don't override email if we just set it from Discord
+            const emailToKeep = parsedDiscordData.existing_email || parsedDiscordData.email || parsedFormData.email;
+            setFormData(prev => ({
+              ...parsedFormData,
+              email: emailToKeep
+            }));
             // Clear saved data
             localStorage.removeItem('signup_form_data');
           } catch (error) {
@@ -170,13 +199,14 @@ const Signup = () => {
     setIsLoading(true);
 
     // Validation
-    if (!passwordValidation.isValid) {
+    if (!isExistingUser && !passwordValidation.isValid) {
       setError('Password does not meet requirements');
       setIsLoading(false);
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    // Only check password confirmation for new users
+    if (!isExistingUser && formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
       return;
@@ -189,24 +219,34 @@ const Signup = () => {
     }
 
     try {
-      await registerWithDiscord(
-        formData.email, 
-        formData.password, 
-        formData.confirmPassword,
-        discordData.id,
-        {
-          id: discordData.id,
-          username: discordData.username,
-          global_name: discordData.global_name || discordData.username,
-          avatar: discordData.avatar,
-          discriminator: discordData.discriminator,
-          locale: 'en-US',
-          join_date: new Date().toLocaleDateString()
-        }
-      );
-      navigate('/dashboard');
+      if (isExistingUser) {
+        // For existing users, attempt to log them in
+        console.log('🔑 Logging in existing user:', formData.email);
+        await login(formData.email, formData.password);
+        navigate('/dashboard');
+      } else {
+        // For new users, register them
+        console.log('📝 Registering new user:', formData.email);
+        await registerWithDiscord(
+          formData.email, 
+          formData.password, 
+          formData.confirmPassword,
+          discordData.id,
+          {
+            id: discordData.id,
+            username: discordData.username,
+            global_name: discordData.global_name || discordData.username,
+            avatar: discordData.avatar,
+            discriminator: discordData.discriminator,
+            locale: 'en-US',
+            join_date: new Date().toLocaleDateString()
+          }
+        );
+        navigate('/dashboard');
+      }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      const errorMessage = error instanceof Error ? error.message : 
+        isExistingUser ? 'Login failed' : 'Registration failed';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -266,8 +306,30 @@ const Signup = () => {
                 className="w-10 h-10"
               />
             </motion.div>
-            <h1 className="text-3xl font-bold text-gradient mb-2">Create Account</h1>
-            <p className="text-gray-400">Join Nova and optimize your system</p>
+            <h1 className="text-3xl font-bold text-gradient mb-2">
+              {isExistingUser ? 'Welcome Back!' : 'Create Account'}
+            </h1>
+            <p className="text-gray-400">
+              {isExistingUser 
+                ? 'Sign in with your Discord account and password' 
+                : 'Join Nova and optimize your system'
+              }
+            </p>
+            
+            {/* Existing User Notice */}
+            {isExistingUser && (
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mt-4">
+                <div className="flex items-center space-x-3">
+                  <User className="w-5 h-5 text-blue-400" />
+                  <div>
+                    <p className="text-blue-400 text-sm font-medium">Account Found</p>
+                    <p className="text-gray-400 text-xs">
+                      We found an existing account with your Discord. Please enter your password to sign in.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Error Message */}
@@ -327,7 +389,7 @@ const Signup = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 text-white placeholder-gray-400"
-                  placeholder="Create a password"
+                  placeholder={isExistingUser ? "Enter your password" : "Create a password"}
                 />
                 <button
                   type="button"
@@ -338,8 +400,8 @@ const Signup = () => {
                 </button>
               </div>
 
-              {/* Password Requirements */}
-              {formData.password && (
+              {/* Password Requirements - Only show for new users */}
+              {!isExistingUser && formData.password && (
                 <div className="mt-2 space-y-1 text-xs">
                   <div className={`flex items-center gap-2 ${passwordValidation.minLength ? 'text-green-400' : 'text-red-400'}`}>
                     {passwordValidation.minLength ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
@@ -361,36 +423,38 @@ const Signup = () => {
               )}
             </motion.div>
 
-            {/* Confirm Password Field */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 text-white placeholder-gray-400"
-                  placeholder="Confirm your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </motion.div>
+            {/* Confirm Password Field - Only show for new users */}
+            {!isExistingUser && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 text-white placeholder-gray-400"
+                    placeholder="Confirm your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </motion.div>
+            )}
 
             {/* Discord Connection */}
             <motion.div
@@ -457,7 +521,7 @@ const Signup = () => {
               )}
             </motion.div>
 
-            {/* Sign Up Button */}
+            {/* Submit Button */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -465,16 +529,23 @@ const Signup = () => {
             >
               <Button
                 type="submit"
-                disabled={isLoading || !formData.email || !passwordValidation.isValid || formData.password !== formData.confirmPassword || !isDiscordConnected}
+                disabled={
+                  isLoading || 
+                  !formData.email || 
+                  !formData.password ||
+                  !isDiscordConnected ||
+                  // For new users: check password validation and confirmation
+                  (!isExistingUser && (!passwordValidation.isValid || formData.password !== formData.confirmPassword))
+                }
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Creating Account...</span>
+                    <span>{isExistingUser ? 'Signing In...' : 'Creating Account...'}</span>
                   </>
                 ) : (
-                  <span>Create Account</span>
+                  <span>{isExistingUser ? 'Sign In' : 'Create Account'}</span>
                 )}
               </Button>
             </motion.div>

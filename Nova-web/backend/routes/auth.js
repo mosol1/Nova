@@ -523,121 +523,44 @@ router.get('/discord/callback', authLimiter, async (req, res) => {
     // Check if user already exists
     let user = await User.findOne({ discord_id: user_data.id });
     
-    if (user) {
-      console.log('✅ User found in database:', user.email);
-      console.log('🔍 User discord_id in DB:', user.discord_id);
-      console.log('🔍 Discord ID from OAuth:', user_data.id);
-      
-      // User exists, log them in
-      const token = createSessionToken(user);
-      console.log('🔑 Created session token:', token.substring(0, 20) + '...');
-      
-      setUserSession(res, user, token);
-      console.log('🍪 Session cookies set for user:', user.email);
-      
-      // Update last login
-      user.last_login = new Date();
-      await user.save();
-      
-      // Check if this is a Nova Hub authentication request
-      // For Nova Hub, the state parameter is a simple GUID, not base64 JSON
-      let isNovaHubAuth = false;
-      let novaState = state;
-      
-      // Check if we have a referrer that indicates Nova Hub auth
-      const referrer = req.get('Referer') || '';
-      if (referrer.includes('return=nova%3A%2F%2F') || referrer.includes('return=nova://')) {
-        isNovaHubAuth = true;
-        console.log('🚀 Nova Hub authentication detected via referrer:', referrer);
-      }
-      
-      // Also check if state looks like a Nova Hub GUID (32 hex characters)
-      if (state && /^[a-f0-9]{32}$/i.test(state)) {
-        isNovaHubAuth = true;
-        console.log('🚀 Nova Hub authentication detected via state format:', state);
-      }
-      
-              if (isNovaHubAuth && novaState) {
-          // Create the callback URL with authentication data for Nova Hub
-          const callbackUrl = `nova://auth/callback?state=${novaState}&token=${token}&userId=${user._id}`;
-          console.log('🚀 Redirecting to Nova Hub:', callbackUrl);
-          return res.redirect(callbackUrl);
-      } else {
-        console.log('🚀 Redirecting to dashboard for user:', user.email);
-        
-        // Check if this might have been a Nova Hub auth attempt that we failed to detect
-        let dashboardUrl = `${FRONTEND_URL}/dashboard`;
-        if (state && /^[a-f0-9]{32}$/i.test(state)) {
-          // Add nova_auth parameter to indicate this might be from Nova Hub
-          dashboardUrl += `?nova_auth=${state}&token=${token}&userId=${user._id}`;
-          console.log('🔍 Adding Nova Hub auth parameters to dashboard redirect');
-        }
-        
-        return res.redirect(dashboardUrl);
-      }
+    // Always redirect to signup with Discord data (even for existing users)
+    // This allows users to review their information before completing signup
+    console.log('🔄 Redirecting to signup with Discord data for review');
+    
+    // Remove large profile_picture to avoid URL length limits
+    const signupData = {
+      ...user_data,
+      profile_picture: undefined, // Will be fetched again when needed
+      existing_user: !!user, // Flag to indicate if user already exists
+      existing_email: user?.email // Include existing email if user exists
+    };
+    
+    const encodedData = encodeURIComponent(JSON.stringify(signupData));
+    
+    // Check if this is a Nova Hub authentication request
+    // For Nova Hub, the state parameter is a simple GUID, not base64 JSON
+    let isNovaHubAuth = false;
+    let novaState = state;
+    
+    // Check if we have a referrer that indicates Nova Hub auth
+    const referrer = req.get('Referer') || '';
+    if (referrer.includes('return=nova%3A%2F%2F') || referrer.includes('return=nova://')) {
+      isNovaHubAuth = true;
+      console.log('🚀 Nova Hub authentication detected via referrer:', referrer);
+    }
+    
+    // Also check if state looks like a Nova Hub GUID (32 hex characters)
+    if (state && /^[a-f0-9]{32}$/i.test(state)) {
+      isNovaHubAuth = true;
+      console.log('🚀 Nova Hub authentication detected via state format:', state);
+    }
+    
+    if (isNovaHubAuth) {
+      // For Nova Hub, add state parameter to signup URL
+      return res.redirect(`${FRONTEND_URL}/signup?discord_data=${encodedData}&nova_state=${novaState}`);
     } else {
-      console.log('❌ No user found with Discord ID:', user_data.id);
-      console.log('🔍 Checking all users with discord_id field...');
-      
-      // Debug: Check what discord_ids exist in the database
-      const allUsersWithDiscord = await User.find({ discord_id: { $exists: true, $ne: null } }).select('email discord_id');
-      console.log('📋 Users with discord_id in DB:', allUsersWithDiscord.map(u => ({ email: u.email, discord_id: u.discord_id })));
-      
-      // Check if this is a Nova Hub authentication request
-      // For Nova Hub, the state parameter is a simple GUID, not base64 JSON
-      let isNovaHubAuth = false;
-      let novaState = state;
-      
-      // Check if we have a referrer that indicates Nova Hub auth
-      const referrer = req.get('Referer') || '';
-      if (referrer.includes('return=nova%3A%2F%2F') || referrer.includes('return=nova://')) {
-        isNovaHubAuth = true;
-        console.log('🚀 Nova Hub authentication detected (new user) via referrer:', referrer);
-      }
-      
-      // Also check if state looks like a Nova Hub GUID (32 hex characters)
-      if (state && /^[a-f0-9]{32}$/i.test(state)) {
-        isNovaHubAuth = true;
-        console.log('🚀 Nova Hub authentication detected (new user) via state format:', state);
-      }
-      
-      if (isNovaHubAuth) {
-        // For Nova Hub, we'll auto-register the user with Discord data
-        console.log('🚀 Auto-registering user for Nova Hub authentication');
-        
-        const newUser = new User({
-          email: user_data.email || `${user_data.username}@discord.temp`,
-          discord_id: user_data.id,
-          user_data: {
-            ...user_data,
-            global_name: user_data.global_name || user_data.username
-          },
-          status: 'Free',
-          created_at: new Date(),
-          last_login: new Date()
-        });
-
-        await newUser.save();
-        console.log('✅ User auto-registered for Nova Hub:', newUser.email);
-
-        // Create session token and redirect to Nova Hub
-        const token = createSessionToken(newUser);
-        setUserSession(res, newUser, token);
-        
-        const callbackUrl = `nova://auth/callback?state=${novaState}&token=${token}&userId=${newUser._id}`;
-        console.log('🚀 Redirecting new user to Nova Hub:', callbackUrl);
-        return res.redirect(callbackUrl);
-      } else {
-        // User doesn't exist, redirect to signup with Discord data
-        // Remove large profile_picture to avoid URL length limits
-        const signupData = {
-          ...user_data,
-          profile_picture: undefined // Will be fetched again when needed
-        };
-        const encodedData = encodeURIComponent(JSON.stringify(signupData));
-        console.log('🔄 Redirecting to signup with Discord data');
-        return res.redirect(`${FRONTEND_URL}/signup?discord_data=${encodedData}`);
-      }
+      // Regular signup redirect
+      return res.redirect(`${FRONTEND_URL}/signup?discord_data=${encodedData}`);
     }
   } catch (error) {
     console.error('❌ Discord OAuth callback error:', error);
