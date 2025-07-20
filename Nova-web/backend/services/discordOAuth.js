@@ -57,23 +57,41 @@ class DiscordOAuthService {
   // Exchange code for access token
   async exchangeCodeForToken(code) {
     try {
-      const response = await axios.post('https://discord.com/api/oauth2/token', {
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: this.redirectUri,
-        scope: 'identify email guilds' // Added email scope
-      }, {
+      // Create URL-encoded form data (Discord requires this format)
+      const formData = new URLSearchParams();
+      formData.append('client_id', this.clientId);
+      formData.append('client_secret', this.clientSecret);
+      formData.append('grant_type', 'authorization_code');
+      formData.append('code', code);
+      formData.append('redirect_uri', this.redirectUri);
+      formData.append('scope', 'identify email guilds');
+
+      const response = await axios.post('https://discord.com/api/oauth2/token', formData, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Nova-Backend/1.0'
+        },
+        timeout: 10000 // 10 second timeout
       });
 
+      console.log('✅ Successfully exchanged Discord code for token');
       return response.data;
     } catch (error) {
-      console.error('Error exchanging code for token:', error.response?.data || error.message);
-      throw new Error('Failed to exchange code for token');
+      console.error('❌ Discord token exchange failed:');
+      console.error('Status:', error.response?.status);
+      console.error('Data:', error.response?.data);
+      console.error('Message:', error.message);
+      
+      // More specific error handling
+      if (error.response?.status === 400) {
+        throw new Error('Invalid Discord authorization code or redirect URI mismatch');
+      } else if (error.response?.status === 401) {
+        throw new Error('Invalid Discord client credentials');
+      } else if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+        throw new Error('Network timeout connecting to Discord API');
+      } else {
+        throw new Error('Failed to exchange code for token');
+      }
     }
   }
 
@@ -82,14 +100,30 @@ class DiscordOAuthService {
     try {
       const response = await axios.get('https://discord.com/api/users/@me', {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+          'Authorization': `Bearer ${accessToken}`,
+          'User-Agent': 'Nova-Backend/1.0'
+        },
+        timeout: 10000 // 10 second timeout
       });
 
+      console.log('✅ Successfully fetched Discord user info for:', response.data.username);
       return response.data;
     } catch (error) {
-      console.error('Error fetching user info:', error.response?.data || error.message);
-      throw new Error('Failed to fetch user information');
+      console.error('❌ Discord user info fetch failed:');
+      console.error('Status:', error.response?.status);
+      console.error('Data:', error.response?.data);
+      console.error('Message:', error.message);
+      
+      // More specific error handling
+      if (error.response?.status === 401) {
+        throw new Error('Invalid or expired Discord access token');
+      } else if (error.response?.status === 429) {
+        throw new Error('Discord API rate limit exceeded');
+      } else if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+        throw new Error('Network timeout connecting to Discord API');
+      } else {
+        throw new Error('Failed to fetch user information');
+      }
     }
   }
 
