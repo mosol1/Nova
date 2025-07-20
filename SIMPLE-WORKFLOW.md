@@ -1,104 +1,85 @@
-# 🚀 Super Simple Nova Workflow
+# 🚀 Simple Nova Development Workflow
 
-## 🏠 **FOR LOCAL DEVELOPMENT (No Production Impact):**
+## 🎯 **One File, Easy Switching**
 
-### **1. Create .env File**
-Create `Nova-web/backend/.env`:
+You have **one `.env` file** in `Nova-web/backend/.env` that works for both development and production. Just change `NODE_ENV` and everything switches!
+
+---
+
+## 🏠 **FOR LOCAL DEVELOPMENT (No Production Impact)**
+
+### **Setup (One Time):**
+1. **Fill out your `.env` file** with both dev and production credentials
+2. **Create two Discord apps**: 
+   - "Nova Production" → Fill `DISCORD_PROD_*` variables
+   - "Nova Development" → Fill `DISCORD_DEV_*` variables
+
+### **Daily Development:**
 ```bash
+# 1. Set development mode in .env file
 NODE_ENV=development
 
-# Dev Discord App
-DISCORD_DEV_CLIENT_ID=your-dev-discord-client-id
-DISCORD_DEV_CLIENT_SECRET=your-dev-discord-client-secret
-DISCORD_DEV_REDIRECT_URI=http://localhost:5000/api/auth/discord/callback
+# 2. Start coding locally
+cd Nova-web/backend && npm run dev
+cd Nova-web/frontend && npm run dev
 
-# Dev Database  
-MONGODB_URI_DEV=mongodb://localhost:27017/nova-dev
-
-# Dev Security (simple)
-JWT_SECRET_DEV=dev-jwt-secret
-
-# Dev URLs
-FRONTEND_URL_DEV=http://localhost:5173
-BACKEND_URL_DEV=http://localhost:5000
-
-# Prod Discord App
-DISCORD_PROD_CLIENT_ID=your-prod-discord-client-id
-DISCORD_PROD_CLIENT_SECRET=your-prod-discord-client-secret
-DISCORD_PROD_REDIRECT_URI=https://api.novaoptimizer.com/api/auth/discord/callback
-
-# Prod Database
-MONGODB_URI_PROD=mongodb+srv://user:pass@cluster.mongodb.net/nova-prod
-
-# Prod Security (strong)
-JWT_SECRET_PROD=your-super-secure-production-jwt-secret-256-chars
-
-# Prod URLs
-FRONTEND_URL_PROD=https://novaoptimizer.com
-BACKEND_URL_PROD=https://api.novaoptimizer.com
-
-# Shared Settings
-PORT=5000
-JWT_EXPIRES_IN=7d
+# 3. Code, test, repeat...
+# ✅ Uses dev Discord app, dev database, localhost URLs
 ```
 
-### **2. Create Frontend .env.local**
-Create `Nova-web/frontend/.env.local`:
-```bash
-VITE_API_URL=http://localhost:5000/api
-```
-
-### **3. Start Development**
-```bash
-# Terminal 1 - Backend
-cd Nova-web/backend
-npm run dev
-
-# Terminal 2 - Frontend  
-cd Nova-web/frontend
-npm run dev
-```
-
-**✅ Uses dev Discord app, dev database, localhost URLs**
+### **Local Development Uses:**
+- ✅ **DISCORD_DEV_CLIENT_ID** (your dev Discord app)
+- ✅ **MONGODB_URI_DEV** (local database or dev cluster)
+- ✅ **JWT_SECRET_DEV** (simple secret for testing)
+- ✅ **Frontend:** http://localhost:5173
+- ✅ **Backend:** http://localhost:5000
 
 ---
 
-## 🚀 **PRODUCTION RELEASE CHECKLIST:**
+## 🚀 **PRODUCTION RELEASE CHECKLIST**
 
-### **Super Simple Release Process:**
+### **When Ready to Deploy:**
 
-1. **Change .env to Production Mode:**
-   ```bash
-   # In your .env file, change:
-   NODE_ENV=production
-   ```
+#### **1. Switch to Production Mode:**
+```bash
+# In Nova-web/backend/.env file, change:
+NODE_ENV=production
+```
 
-2. **Test Locally (Optional):**
-   ```bash
-   npm run dev  # Will now use prod credentials locally
-   ```
+#### **2. Test Production Build Locally (Optional):**
+```bash
+cd Nova-web/backend && npm start
+cd Nova-web/frontend && npm run build
+# ✅ Now uses prod Discord app, prod database, prod URLs
+```
 
-3. **Push to Git:**
-   ```bash
-   git add .
-   git commit -m "Release: ready for production"
-   git push origin main
-   ```
+#### **3. Deploy to Production:**
+```bash
+# Commit and push
+git add .
+git commit -m "Release: your feature description"
+git push origin main
 
-4. **Update Railway:**
-   - **Copy entire `.env` file content**
-   - **Go to Railway Dashboard → Variables**
-   - **Paste all variables**
-   - **Make sure:** `NODE_ENV=production`
-   - **Save**
+# Copy .env file to Railway
+# Railway Dashboard → Variables → Paste all variables from .env
+```
 
-5. **Done!** 🎉
-   - Railway auto-deploys with production settings
-   - Uses prod Discord app, prod database, prod URLs
+#### **4. Switch Back to Development:**
+```bash
+# In Nova-web/backend/.env file, change back:
+NODE_ENV=development
+```
+
+### **Production Release Uses:**
+- ✅ **DISCORD_PROD_CLIENT_ID** (your production Discord app)
+- ✅ **MONGODB_URI_PROD** (production database cluster)
+- ✅ **JWT_SECRET_PROD** (super secure 256-char secret)
+- ✅ **Frontend:** https://novaoptimizer.com
+- ✅ **Backend:** https://api.novaoptimizer.com
 
 ---
 
-## 🚨 **EMERGENCY ROLLBACK (If You Push Bad Code):**
+## 🚨 **EMERGENCY ROLLBACK (If You Push Bad Code)**
 
 ### **Fastest Options (30 seconds):**
 
@@ -110,100 +91,95 @@ npm run dev
 ```bash
 git revert HEAD --no-edit
 git push origin main
-```
-
-#### **Option 3: Force Rollback (Emergency Only)**
-```bash
-git reset --hard LAST_GOOD_COMMIT
-git push --force-with-lease origin main
+# Both platforms auto-deploy the revert
 ```
 
 ---
 
-## 🔄 **Daily Workflow:**
+## 🔄 **Super Simple Workflow**
 
-### **Continue Developing:**
+### **Development (Daily):**
 ```bash
-# 1. Change .env back to development
-NODE_ENV=development
+# .env file: NODE_ENV=development
+npm run dev  # Code locally, test, repeat
+```
 
-# 2. Start coding
-npm run dev
+### **Production Release:**
+```bash
+# .env file: NODE_ENV=production
+git add . && git commit -m "Release v1.0" && git push origin main
+# Copy .env to Railway variables
+# .env file: NODE_ENV=development (switch back)
+```
 
-# 3. Make changes, test locally
-# ... code code code ...
+### **Emergency Rollback:**
+```bash
+git revert HEAD --no-edit && git push origin main
+# Done in 30 seconds!
+```
 
-# 4. Ready to release? Change .env
+---
+
+## 📋 **Environment Variables Quick Copy**
+
+When deploying, copy these from your `.env` file to Railway:
+
+```bash
 NODE_ENV=production
+PORT=5000
+DISCORD_PROD_CLIENT_ID=your-value
+DISCORD_PROD_CLIENT_SECRET=your-value
+DISCORD_PROD_REDIRECT_URI=https://api.novaoptimizer.com/api/auth/discord/callback
+DISCORD_DEV_CLIENT_ID=your-value
+DISCORD_DEV_CLIENT_SECRET=your-value
+DISCORD_DEV_REDIRECT_URI=http://localhost:5000/api/auth/discord/callback
+MONGODB_URI_PROD=your-production-database
+MONGODB_URI_DEV=your-development-database
+JWT_SECRET_PROD=your-production-secret
+JWT_SECRET_DEV=your-development-secret
+FRONTEND_URL_PROD=https://novaoptimizer.com
+FRONTEND_URL_DEV=http://localhost:5173
+BACKEND_URL_PROD=https://api.novaoptimizer.com
+BACKEND_URL_DEV=http://localhost:5000
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+AUTH_RATE_LIMIT_MAX=10
+```
 
-# 5. Push to production
-git add .
-git commit -m "Add new feature"
+---
+
+## 🎯 **Key Benefits**
+
+✅ **One .env file** - no confusion  
+✅ **One variable switch** - just change NODE_ENV  
+✅ **Local testing** - test production settings locally  
+✅ **Safe deployment** - copy exact same config to Railway  
+✅ **Easy rollback** - platform or git revert  
+
+---
+
+## 🔧 **Feature Branch Workflow (Optional)**
+
+For bigger features, use branches for extra safety:
+
+```bash
+# 1. Create feature branch
+git checkout -b feature/new-dashboard
+
+# 2. Develop (NODE_ENV=development)
+# ... code changes ...
+
+# 3. Test feature
+git add . && git commit -m "Add new dashboard"
+
+# 4. Merge to main when ready
+git checkout main
+git merge feature/new-dashboard
+
+# 5. Release (NODE_ENV=production)
 git push origin main
-
-# 6. Copy .env to Railway (if new variables added)
-```
-
-### **Environment Switching:**
-- **Development:** `NODE_ENV=development` in `.env`
-- **Production:** `NODE_ENV=production` in `.env` + Railway
-
----
-
-## 🎯 **Key Benefits:**
-
-✅ **One .env file** - Contains both dev and prod credentials  
-✅ **Just change NODE_ENV** - Everything switches automatically  
-✅ **Simple release** - Change NODE_ENV → Push → Copy to Railway  
-✅ **Safe development** - Separate Discord apps, databases, URLs  
-✅ **Instant rollback** - Platform dashboards or git revert  
-
----
-
-## 📋 **Setup Checklist (One Time):**
-
-### **Discord Apps:**
-- [ ] Create "Nova Development" Discord app
-- [ ] Create "Nova Production" Discord app
-- [ ] Set redirect URIs correctly for each
-
-### **Environment File:**
-- [ ] Create `.env` with both dev and prod credentials
-- [ ] Create `.env.local` for frontend
-- [ ] Add `.env` to .gitignore (never commit secrets)
-
-### **Production Setup:**
-- [ ] Copy `.env` content to Railway
-- [ ] Set `NODE_ENV=production` in Railway
-- [ ] Verify deployment works
-
----
-
-## 🔧 **What Gets Logged:**
-
-### **Development Mode:**
-```bash
-🔗 Discord OAuth configured for: DEVELOPMENT
-📱 Client ID: dev12345...
-🔗 Redirect URI: http://localhost:5000/api/auth/discord/callback
-✅ MongoDB connected successfully (DEVELOPMENT)
-```
-
-### **Production Mode:**
-```bash
-🔗 Discord OAuth configured for: PRODUCTION  
-📱 Client ID: prod98765...
-🔗 Redirect URI: https://api.novaoptimizer.com/api/auth/discord/callback
-✅ MongoDB connected successfully (PRODUCTION)
 ```
 
 ---
 
-## 🚨 **Important Notes:**
-
-⚠️ **Never commit .env file** - Contains secrets  
-⚠️ **Always test before production** - Check locally first  
-⚠️ **Use different databases** - Keep dev and prod separate  
-⚠️ **Copy full .env to Railway** - Don't miss any variables  
-
-**This workflow is bulletproof and super simple!** 🎯 
+**This workflow is dead simple: change NODE_ENV, code/test/deploy, switch back. Perfect for solo development!** 🚀 
