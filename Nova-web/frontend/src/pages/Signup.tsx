@@ -146,6 +146,7 @@ const Signup = () => {
             // Don't override email if we just set it from Discord
             const emailToKeep = parsedDiscordData.existing_email || parsedDiscordData.email || parsedFormData.email;
             setFormData(prev => ({
+              ...prev,
               ...parsedFormData,
               email: emailToKeep
             }));
