@@ -174,26 +174,69 @@ class DiscordOAuthService {
   // Assign role to user
   async assignRoleToUser(userId) {
     if (!this.guildId || !this.verifiedRoleId || !this.botToken) {
-      console.log('Guild ID, role ID, or bot token not configured, skipping role assignment');
-      return { success: false, reason: 'Not configured' };
+      console.log('⚠️  Discord role assignment skipped: Missing configuration');
+      console.log('   - Guild ID:', this.guildId ? '✅ Set' : '❌ Missing');
+      console.log('   - Role ID:', this.verifiedRoleId ? '✅ Set' : '❌ Missing');
+      console.log('   - Bot Token:', this.botToken ? '✅ Set' : '❌ Missing');
+      return { success: false, reason: 'Bot not configured for role assignment' };
     }
 
     try {
+      console.log(`🤖 Attempting to assign role ${this.verifiedRoleId} to user ${userId} in guild ${this.guildId}`);
+      
       const response = await axios.put(
         `https://discord.com/api/guilds/${this.guildId}/members/${userId}/roles/${this.verifiedRoleId}`,
         {},
         {
           headers: {
             'Authorization': `Bot ${this.botToken}`,
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+            'User-Agent': 'Nova-Backend/1.0'
+          },
+          timeout: 10000 // 10 second timeout
         }
       );
 
+      console.log('✅ Discord role assigned successfully');
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Error assigning role to user:', error.response?.data || error.message);
-      return { success: false, error: error.response?.data || error.message };
+      const status = error.response?.status;
+      const errorData = error.response?.data;
+      
+      console.error('❌ Discord role assignment failed:');
+      console.error('   Status:', status);
+      console.error('   Error:', errorData);
+      
+      // Handle specific Discord API errors
+      if (status === 403) {
+        if (errorData?.code === 50001) {
+          console.error('   → Bot missing "Manage Roles" permission');
+          return { success: false, error: 'Bot lacks Manage Roles permission' };
+        } else if (errorData?.code === 50013) {
+          console.error('   → Bot role hierarchy too low (role is higher than bot)');
+          return { success: false, error: 'Bot role hierarchy insufficient' };
+        } else {
+          console.error('   → Bot lacks necessary permissions');
+          return { success: false, error: 'Bot permissions insufficient' };
+        }
+      } else if (status === 404) {
+        if (errorData?.code === 10007) {
+          console.error('   → User not found in guild (user must join server first)');
+          return { success: false, error: 'User not in guild' };
+        } else if (errorData?.code === 10011) {
+          console.error('   → Role not found in guild');
+          return { success: false, error: 'Role not found' };
+        } else {
+          console.error('   → Guild or user not found');
+          return { success: false, error: 'Guild or user not found' };
+        }
+      } else if (status === 401) {
+        console.error('   → Invalid bot token');
+        return { success: false, error: 'Invalid bot token' };
+      } else {
+        console.error('   → Unknown error:', error.message);
+        return { success: false, error: errorData?.message || error.message };
+      }
     }
   }
 

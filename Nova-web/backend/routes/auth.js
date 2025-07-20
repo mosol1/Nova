@@ -21,11 +21,20 @@ const authLimiter = process.env.NODE_ENV === 'production' ? rateLimit({
 const router = express.Router();
 const discordOAuth = new DiscordOAuthService();
 
-// Smart JWT secret switching
+// Smart environment switching for frontend URL
 const isProduction = process.env.NODE_ENV === 'production';
+const FRONTEND_URL = isProduction 
+  ? process.env.FRONTEND_URL_PROD || 'https://novaoptimizer.com'
+  : process.env.FRONTEND_URL_DEV || 'http://localhost:5173';
+
+// Smart JWT secret switching
 const JWT_SECRET = isProduction 
   ? process.env.JWT_SECRET_PROD || process.env.JWT_SECRET || '12f88242285772379b9f315b0cd4965aedbca375fe85e33e10ba2a1acd383c96435390fb'
   : process.env.JWT_SECRET_DEV || process.env.JWT_SECRET || 'dev-jwt-secret-not-for-production';
+
+console.log(`🌐 Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+console.log(`🔗 Frontend URL: ${FRONTEND_URL}`);
+console.log(`🔑 Using JWT secret: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
 
 // Cookie options
 const cookieOptions = {
@@ -488,11 +497,11 @@ router.get('/discord/callback', authLimiter, async (req, res) => {
     const { code, state, error } = req.query;
     
     if (error) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=${encodeURIComponent(error)}`);
+      return res.redirect(`${FRONTEND_URL}/login?error=${encodeURIComponent(error)}`);
     }
     
     if (!code) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=missing_code`);
+      return res.redirect(`${FRONTEND_URL}/login?error=missing_code`);
     }
     
     console.log('🔍 Discord OAuth callback - processing code:', code.substring(0, 10) + '...');
@@ -504,7 +513,7 @@ router.get('/discord/callback', authLimiter, async (req, res) => {
     
     if (!result.success) {
       console.log('❌ Discord OAuth flow failed:', result.error);
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=${encodeURIComponent(result.error)}`);
+      return res.redirect(`${FRONTEND_URL}/login?error=${encodeURIComponent(result.error)}`);
     }
     
     const { user_data } = result;
@@ -548,16 +557,16 @@ router.get('/discord/callback', authLimiter, async (req, res) => {
         console.log('🚀 Nova Hub authentication detected via state format:', state);
       }
       
-      if (isNovaHubAuth && novaState) {
-        // Create the callback URL with authentication data for Nova Hub
-        const callbackUrl = `nova://auth/callback?state=${novaState}&token=${token}&userId=${user._id}`;
-        console.log('🚀 Redirecting to Nova Hub:', callbackUrl);
-        return res.redirect(callbackUrl);
+              if (isNovaHubAuth && novaState) {
+          // Create the callback URL with authentication data for Nova Hub
+          const callbackUrl = `nova://auth/callback?state=${novaState}&token=${token}&userId=${user._id}`;
+          console.log('🚀 Redirecting to Nova Hub:', callbackUrl);
+          return res.redirect(callbackUrl);
       } else {
         console.log('🚀 Redirecting to dashboard for user:', user.email);
         
         // Check if this might have been a Nova Hub auth attempt that we failed to detect
-        let dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`;
+        let dashboardUrl = `${FRONTEND_URL}/dashboard`;
         if (state && /^[a-f0-9]{32}$/i.test(state)) {
           // Add nova_auth parameter to indicate this might be from Nova Hub
           dashboardUrl += `?nova_auth=${state}&token=${token}&userId=${user._id}`;
@@ -627,12 +636,12 @@ router.get('/discord/callback', authLimiter, async (req, res) => {
         };
         const encodedData = encodeURIComponent(JSON.stringify(signupData));
         console.log('🔄 Redirecting to signup with Discord data');
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/signup?discord_data=${encodedData}`);
+        return res.redirect(`${FRONTEND_URL}/signup?discord_data=${encodedData}`);
       }
     }
   } catch (error) {
     console.error('❌ Discord OAuth callback error:', error);
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=oauth_failed`);
+    res.redirect(`${FRONTEND_URL}/login?error=oauth_failed`);
   }
 });
 
