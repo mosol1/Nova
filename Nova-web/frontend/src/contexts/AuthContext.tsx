@@ -1,5 +1,5 @@
 import React, { useState, useEffect, type ReactNode } from 'react';
-import { type User, authAPI, getStoredUser, getStoredToken, clearAuth, getCookieUserData } from '../lib/auth';
+import { type User, authAPI, getStoredUser, getStoredToken, clearAuth, getCookieUserData, getCookieAuthToken, isAuthenticatedEnhanced } from '../lib/auth';
 import { AuthContext, type AuthContextType } from './AuthContextType';
 
 interface AuthProviderProps {
@@ -14,30 +14,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Enhanced auth refresh - better handles OAuth redirects
   const refreshAuth = async () => {
     try {
-      // Check localStorage first
+      // Check both localStorage and cookies
       const storedToken = getStoredToken();
       const storedUser = getStoredUser();
-
-      // Then check cookies
+      const cookieToken = getCookieAuthToken();
       const cookieUser = getCookieUserData();
-      
-      // Check for auth_token in cookies
-      const cookies = document.cookie.split(';');
-      const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('auth_token='));
 
-      if (storedToken && (storedUser || cookieUser)) {
+      // Priority: localStorage first, then cookies (OAuth redirects)
+      if (storedToken && storedUser) {
+        // Use localStorage data
         setToken(storedToken);
-        setUser(storedUser || cookieUser);
+        setUser(storedUser);
         
         // Verify token is still valid
         try {
           const currentUser = await authAPI.getCurrentUser();
           if (currentUser) {
             setUser(currentUser);
-            // Update localStorage with fresh data
             localStorage.setItem('user_data', JSON.stringify(currentUser));
           } else {
-            // Token is invalid, clear auth
             clearAuth();
             setUser(null);
             setToken(null);
@@ -48,19 +43,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(null);
           setToken(null);
         }
-      } else if (cookieUser && tokenCookie) {
-        const cookieToken = tokenCookie.split('=')[1];
-        if (cookieToken) {
-          console.log('✅ Auth restored from cookies after OAuth redirect');
-          setToken(cookieToken);
-          setUser(cookieUser);
-          
-          // Store in localStorage for future use
-          localStorage.setItem('auth_token', cookieToken);
-          localStorage.setItem('user_data', JSON.stringify(cookieUser));
-        }
+      } else if (cookieToken && cookieUser) {
+        // Cookie-based auth (OAuth redirect) - sync to localStorage immediately
+        console.log('✅ Auth restored from cookies after OAuth redirect');
+        setToken(cookieToken);
+        setUser(cookieUser);
+        
+        // Immediately sync to localStorage for future page loads
+        localStorage.setItem('auth_token', cookieToken);
+        localStorage.setItem('user_data', JSON.stringify(cookieUser));
+        
+        console.log('✅ Auth synced from cookies to localStorage');
       } else {
-        // No valid auth found, clear everything
+        // No valid auth found
+        console.log('❌ No valid authentication found');
         clearAuth();
         setUser(null);
         setToken(null);

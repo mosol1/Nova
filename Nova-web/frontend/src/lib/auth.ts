@@ -344,4 +344,36 @@ export const getCookieUserData = (): User | null => {
   }
 };
 
+// Helper function to get auth token from cookies
+export const getCookieAuthToken = (): string | null => {
+  try {
+    const cookies = document.cookie.split(';');
+    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('auth_token='));
+    
+    if (tokenCookie) {
+      return tokenCookie.split('=')[1];
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+// Enhanced authentication check that includes cookies
+export const isAuthenticatedEnhanced = (): boolean => {
+  // Check localStorage first
+  const localToken = getStoredToken();
+  const localUser = getStoredUser();
+  
+  // Check cookies as fallback (important for OAuth redirects)
+  const cookieToken = getCookieAuthToken();
+  const cookieUser = getCookieUserData();
+  
+  return !!(
+    (localToken && localUser) || 
+    (cookieToken && cookieUser)
+  );
+};
+
 export default api; 
