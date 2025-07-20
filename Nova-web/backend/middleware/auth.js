@@ -2,7 +2,11 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET || '12f88242285772379b9f315b0cd4965aedbca375fe85e33e10ba2a1acd383c96435390fb';
+// Smart JWT secret switching - must match the logic in routes/auth.js
+const isProduction = process.env.NODE_ENV === 'production';
+const JWT_SECRET = isProduction 
+  ? process.env.JWT_SECRET_PROD || process.env.JWT_SECRET || '12f88242285772379b9f315b0cd4965aedbca375fe85e33e10ba2a1acd383c96435390fb'
+  : process.env.JWT_SECRET_DEV || process.env.JWT_SECRET || 'dev-jwt-secret-not-for-production';
 
 /**
  * Middleware to authenticate JWT token
